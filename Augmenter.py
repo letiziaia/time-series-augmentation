@@ -26,15 +26,20 @@ class Augmenter:
         plt.show()
         return x, y, idx
 
-    def jittering(self, mu=0.0, sigma=0.01):
+    def jittering(self, mu=0.0, sigma=0.01, additive=True):
         """
         Produce a new time series by adding normally distributed random noise
         :param mu: float, the mean of the random noise distribution
         :param sigma: float, the standard deviation of the random noise distribution
+        :param additive: bool, the noise is added as T+epsilon when true;
+                        if false, noise is multiplicative: T*(1+epsilon)
         :return: a new time series, its label, the index of the seed time series
         """
         x, y, idx = self.__random_selection()
-        return x * (1 + np.random.normal(loc=mu, scale=sigma, size=len(x))), y, idx
+        if additive:
+            return x + np.random.normal(loc=mu, scale=sigma, size=len(x)), y, idx
+        else:
+            return x * (1 + np.random.normal(loc=mu, scale=sigma, size=len(x))), y, idx
 
     def flipping(self):
         """
@@ -44,8 +49,14 @@ class Augmenter:
         x, y, idx = self.__random_selection()
         return -x, y, idx
 
-    def smote(self):
-        return
+    def smote_oversampling(self):
+        """
+        Produce a new time series as element-wise average of two randomly chosen time series
+        :return: the new time series, its label, the indices of the seed time series
+        """
+        x1, y1, idx1 = self.__random_selection()
+        x2, y2, idx2 = self.__random_selection()
+        return (x1 + x2) / 2, y1, (idx1, idx2)
 
     def permutation(self, n_segments=2):
         """
@@ -97,26 +108,42 @@ if __name__ == '__main__':
 
     path = 'C:/Users/letiz/Desktop/Bachelor\'s Thesis and Seminar - JOIN.bsc/data'
     dt = DataLoader(path=path, data_name='insect')
-    df = dt.regular_train_df
-    print(df)
-    a = Augmenter(data=df[df.columns[1:]], labels=df[df.columns[0]])
+    X = dt.regular_train_df
 
-    # xx, _, _ = a.jittering(mu=0, sigma=0.001)
+    # minority class
+    classes, counts = np.unique(X[0].to_numpy(), return_counts=True)
+    print("Classes: ", classes)
+    print("Counts: ", counts)
+    minority = [x for _, x in sorted(zip(counts, classes))][0]
+    print("Minority class: ", minority)
+
+    X = X[X[0] == minority]
+    y = X[0]
+    X = X[X.columns[1:]]
+
+    aug = Augmenter(data=X, labels=y)
+
+    # xx, _, _ = aug.jittering(mu=0, sigma=0.001)
     # print(xx)
     # sns.lineplot(x=range(len(xx)), y=xx, label="jittered")
     # plt.show()
     #
-    # xx, _, _ = a.flipping()
+    # xx, _, _ = aug.flipping()
     # print(xx)
     # sns.lineplot(x=range(len(xx)), y=xx, label="flipped")
     # plt.show()
+    #
+    # xx, _, _ = aug.permutation(n_segments=7)
+    # print(xx)
+    # sns.lineplot(x=range(len(xx)), y=xx, label="permuted")
+    # plt.show()
+    #
+    # xx, _, _ = aug.window_slicing(d=400)
+    # print(xx)
+    # sns.lineplot(x=range(len(xx)), y=xx, label="sliced")
+    # plt.show()
 
-    xx, _, _ = a.permutation(n_segments=7)
+    xx, _, _ = aug.smote_oversampling()
     print(xx)
-    sns.lineplot(x=range(len(xx)), y=xx, label="permuted")
-    plt.show()
-
-    xx, _, _ = a.window_slicing(d=400)
-    print(xx)
-    sns.lineplot(x=range(len(xx)), y=xx, label="sliced")
+    sns.lineplot(x=range(len(xx)), y=xx, label="smote_average")
     plt.show()
