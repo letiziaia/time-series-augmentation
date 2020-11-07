@@ -1,6 +1,8 @@
 import glob
 
+import numpy as np
 import pandas as pd
+from sklearn.preprocessing import OneHotEncoder
 
 
 class DataLoader:
@@ -39,10 +41,34 @@ class DataLoader:
         self.test_df = pd.read_csv(glob.glob(regular_train_source + "/*TEST.tsv")[0],
                                    sep='\t', header=None)
 
+        return
+
+    def get_X_y(self, one_hot_encoding=True):
+        """
+        Return X_train, y_train, X_test, y_test (the train is always the regular train).
+        X_train and X_test are pandas DataFrame;
+        y_train and y_test contain the labels, and are either 1d (pandas Series) or multidimensional
+        one-hot encoded arrays (if one_hot_encoding=True)
+        :param one_hot_encoding: bool, if true, the label column is one-hot encoded
+        :return: X_train, y_train, X_test, y_test
+        """
+        tr = self.regular_train_df
+        te = self.test_df
+        X_train = tr[tr.columns[1:]]
+        y_train = tr[tr.columns[0]]
+        X_test = te[te.columns[1:]]
+        y_test = te[te.columns[0]]
+        if one_hot_encoding:
+            enc = OneHotEncoder(categories='auto')
+            enc.fit(np.concatenate((y_train, y_test), axis=0).reshape(-1, 1))
+            y_train = enc.transform(y_train.to_numpy().reshape(-1, 1)).toarray()
+            y_test = enc.transform(y_test.to_numpy().reshape(-1, 1)).toarray()
+        return X_train, y_train, X_test, y_test
+
 
 if __name__ == '__main__':
     path = 'C:/Users/letiz/Desktop/Bachelor\'s Thesis and Seminar - JOIN.bsc/data'
     data = DataLoader(path=path, data_name='insect')
     print(data.regular_train_df)
-    print(data.short_train_df)
+    # print(data.short_train_df)
     print(data.test_df)
