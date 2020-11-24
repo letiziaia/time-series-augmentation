@@ -2,13 +2,11 @@ import glob
 
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
 
 
 class DataLoader:
-    """Load one of the 3 datasets (Freezer, InsectEPG, MixedShapes) from UCR time series archive.
-    Each one of those 3 datasets has 2 different train sets, one of which is smaller and the other one is regular,
-    and one unique test set for evaluation."""
+    """Load one of the selected datasets (Beef, Freezer, InsectEPG, MixedShapes) from UCR time series archive."""
 
     def __init__(self, path, data_name='freezer'):
         """
@@ -29,11 +27,39 @@ class DataLoader:
             regular_train_source = path + "/MixedShapesRegularTrain"
             small_train_source = path + "/MixedShapesSmallTrain"
 
-        else:
+        elif 'freezer' in data_name:
             # Load freezer
             print("Loading the Freezer data set...")
             regular_train_source = path + "/FreezerRegularTrain"
             small_train_source = path + "/FreezerSmallTrain"
+
+        elif 'beef' in data_name:
+            # Load beef
+            print("Loading the Beef data set...")
+            regular_train_source = path + "/Beef"
+            small_train_source = path + "/Beef"
+
+        elif 'coffee' in data_name:
+            # Load beef
+            print("Loading the Coffee data set...")
+            regular_train_source = path + "/Coffee"
+            small_train_source = path + "/Coffee"
+
+        elif 'ecg200' in data_name:
+            # Load ECG200
+            print("Loading the ECG200 data set...")
+            regular_train_source = path + "/ECG200"
+            small_train_source = path + "/ECG200"
+
+        elif 'gunpoint' in data_name:
+            # Load beef
+            print("Loading the GunPoint data set...")
+            regular_train_source = path + "/GunPoint"
+            small_train_source = path + "/GunPoint"
+
+        else:
+            pass  # unsafe
+
         self.short_train_df = pd.read_csv(glob.glob(small_train_source + "/*TRAIN.tsv")[0],
                                           sep='\t', header=None)
         self.regular_train_df = pd.read_csv(glob.glob(regular_train_source + "/*TRAIN.tsv")[0],
@@ -43,12 +69,26 @@ class DataLoader:
 
         return
 
+    def describe(self):
+        X_train, y_train, X_test, y_test = self.get_X_y(one_hot_encoding=False)
+        train_size = X_train.shape[0]
+        ts_len = X_train.shape[1]
+        test_size = X_test.shape[0]
+        classes, counts = np.unique(y_train, return_counts=True)
+        print("\n")
+        print(f"The data contains {len(classes)} classes of time series of length {ts_len}.")
+        print(f"The training set contains {train_size} samples and the test set has {test_size} samples.")
+        for i in range(len(classes)):
+            print(f"Class {classes[i]} contains {counts[i]} samples.")
+        print("\n")
+        return
+
     def get_X_y(self, one_hot_encoding=True):
         """
         Return X_train, y_train, X_test, y_test (the train is always the regular train).
         X_train and X_test are pandas DataFrame;
-        y_train and y_test contain the labels, and are either 1d (pandas Series) or multidimensional
-        one-hot encoded arrays (if one_hot_encoding=True)
+        y_train and y_test contain the labels, and are either 1d np.array with values 0 to num_classes-1
+        or multidimensional one-hot encoded arrays (if one_hot_encoding=True)
         :param one_hot_encoding: bool, if true, the label column is one-hot encoded
         :return: X_train, y_train, X_test, y_test
         """
@@ -63,12 +103,20 @@ class DataLoader:
             enc.fit(np.concatenate((y_train, y_test), axis=0).reshape(-1, 1))
             y_train = enc.transform(y_train.to_numpy().reshape(-1, 1)).toarray()
             y_test = enc.transform(y_test.to_numpy().reshape(-1, 1)).toarray()
+        else:
+            enc = OrdinalEncoder(categories='auto')
+            enc.fit(np.concatenate((y_train, y_test), axis=0).reshape(-1, 1))
+            y_train = np.ravel(enc.transform(y_train.to_numpy().reshape(-1, 1)))
+            y_test = np.ravel(enc.transform(y_test.to_numpy().reshape(-1, 1)))
         return X_train, y_train, X_test, y_test
 
 
 if __name__ == '__main__':
+    # data =  ['insect', 'shapes', 'freezer', 'beef', 'coffee', 'ecg200', 'gunpoint']
+    data_name = 'insect'
     path = 'C:/Users/letiz/Desktop/Bachelor\'s Thesis and Seminar - JOIN.bsc/data'
-    data = DataLoader(path=path, data_name='insect')
+    data = DataLoader(path=path, data_name=data_name)
+    data.describe()
     print(data.regular_train_df)
     # print(data.short_train_df)
     print(data.test_df)
