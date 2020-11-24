@@ -34,25 +34,28 @@ class ClassifierDTW:
             # collect the labels from the neighbors
             candidates = []
             for c in nearest_neighbors:
-                candidates.append(y_train.iloc[c])
+                candidates.append(y_train[c])
             # majority vote
             candidates = np.array(candidates)
             unique, unique_counts = np.unique(candidates, return_counts=True)
             label = [x for _, x in sorted(zip(unique_counts, unique))][-1]
             y_pred.append(label)
             print("y_pred: ", label)
-            print("y_test: ", y_test.iloc[i])
+            print("y_test: ", y_test[i])
             print("------")
 
         print("Total time:", time.time() - start_time)
-        print(classification_report(y_test.values, y_pred))
-        print(confusion_matrix(y_test.values, y_pred))
-        print(balanced_accuracy_score(y_test.values, y_pred))
+        print(classification_report(y_test, y_pred))
+        print(confusion_matrix(y_test, y_pred))
+        print(balanced_accuracy_score(y_test, y_pred))
         return y_pred
 
 
 if __name__ == '__main__':
-    dt = DataLoader(path="C:/Users/letiz/Desktop/Bachelor\'s Thesis and Seminar - JOIN.bsc/data")
+    # data =  ['insect', 'shapes', 'freezer', 'beef', 'coffee', 'ecg200', 'gunpoint']
+    data_name = 'insect'
+    dt = DataLoader(path="C:/Users/letiz/Desktop/Bachelor\'s Thesis and Seminar - JOIN.bsc/data", data_name=data_name)
+    dt.describe()
     X_train, y_train, X_test, y_test = dt.get_X_y(one_hot_encoding=False)
     nb_classes = len(np.unique(y_train))
 
