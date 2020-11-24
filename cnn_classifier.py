@@ -77,9 +77,12 @@ class ClassifierCNN:
 
 
 if __name__ == '__main__':
-    dt = DataLoader(path="C:/Users/letiz/Desktop/Bachelor\'s Thesis and Seminar - JOIN.bsc/data")
+    # data =  ['insect', 'shapes', 'freezer', 'beef', 'coffee', 'ecg200', 'gunpoint']
+    data_name = 'gunpoint'
+    dt = DataLoader(path="C:/Users/letiz/Desktop/Bachelor\'s Thesis and Seminar - JOIN.bsc/data", data_name=data_name)
+    dt.describe()
     X_train, y_train, X_test, y_test = dt.get_X_y(one_hot_encoding=True)
-    nb_classes = len(np.unique(y_train))
+    nb_classes = y_train.shape[1]
 
     if len(X_train.shape) == 2:  # if univariate
         # add a dimension
