@@ -1,5 +1,8 @@
+import time
+
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 from keras.layers import BatchNormalization, Embedding
 from keras.layers import Input, Dense, Reshape, Flatten, Dropout, multiply
@@ -170,9 +173,6 @@ class CGAN():
 
         gen_imgs = self.generator.predict([noise, sampled_labels])
 
-        print("Shape of generated data:")
-        print(gen_imgs.shape)
-        print(sampled_labels)
         for i in range(gen_imgs.shape[0]):
             label = sampled_labels[i]
             sns.lineplot(x=range(gen_imgs.shape[1]), y=np.ravel(gen_imgs[i, :, :]), label=f"gen {label}")
@@ -196,11 +196,16 @@ class CGAN():
 
 
 if __name__ == '__main__':
-    dt = DataLoader(path="C:/Users/letiz/Desktop/Bachelor\'s Thesis and Seminar - JOIN.bsc/data", data_name='insect')
+    # data =  ['insect', 'shapes', 'freezer', 'beef', 'coffee', 'ecg200', 'gunpoint']
+    data_name = 'insect'
+    dt = DataLoader(path="C:/Users/letiz/Desktop/Bachelor\'s Thesis and Seminar - JOIN.bsc/data", data_name=data_name)
+    dt.describe()
+    samples_per_class = int(input("How many samples per class do you want to generate? "))
     X_train, y_train, _, _ = dt.get_X_y(one_hot_encoding=False)
+
+    print("X_train shape: ", X_train.shape)
     nb_classes = len(np.unique(y_train))
 
-    print(X_train.shape)
     # Scale input
     scaler = MinMaxScaler()
     X_train = scaler.fit_transform(X_train)
@@ -211,16 +216,28 @@ if __name__ == '__main__':
         X_train = X_train.reshape((X_train.shape[0], X_train.shape[1], 1))
 
     input_shape = X_train.shape[1:]
-    print(X_train.shape)
+    print("X_train shape (dimension added): ", X_train.shape)
 
-    y_train = np.array([x - 1 for x in y_train])
     y_train = y_train.reshape(-1, 1)
-    print(y_train.shape)
+    print("y_train shape: ", y_train.shape)
 
     cgan = CGAN(input_shape=input_shape, nb_classes=nb_classes,
                 mini_batch_size=input_shape[0],
-                latent_dim=input_shape[1], epochs=1000, n_synthetic_per_class=3)
-    ts, l = cgan.train_generate(X_train, y_train, checkpoint_interval=10000)
+                latent_dim=input_shape[1], epochs=10000, n_synthetic_per_class=samples_per_class)
+    ts, l = cgan.train_generate(X_train, y_train, checkpoint_interval=20000)
+
+    print("\n")
+    print("Shape of generated data: ", ts.shape)
+    print("Shape of labels: ", l.shape)
+    print("\n")
+
+    df = pd.DataFrame(ts, columns=range(ts.shape[1]))
+    df["l"] = l
+    print(df.head())
+
+    timestamp = time.strftime("%d.%m.%y_%H%M%S")
+    df.to_csv("gen_data/cgan_" + data_name + "_" + timestamp + ".tsv", sep="\t")
+
     # ts = scaler.inverse_transform(ts)
     # for i in range(min(ts.shape[0], 3)):
     #     label = l[i]
