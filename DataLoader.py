@@ -41,7 +41,7 @@ class DataLoader:
                 file_name = path + "cgan_beef"
 
             elif 'coffee' in data_name:
-                # Load beef
+                # Load coffee
                 print("Loading the CGAN generated Coffee data set...")
                 file_name = path + "cgan_coffee"
 
@@ -51,7 +51,7 @@ class DataLoader:
                 file_name = path + "cgan_ecg200"
 
             elif 'gunpoint' in data_name:
-                # Load beef
+                # Load gunpoint
                 print("Loading the CGAN generated GunPoint data set...")
                 file_name = path + "cgan_gunpoint"
 
@@ -59,7 +59,7 @@ class DataLoader:
                 pass  # unsafe
 
             self.short_train_df = None
-            self.regular_train_df = pd.read_csv(glob.glob(file_name + "*.tsv")[0], sep='\t', header=0)
+            self.regular_train_df = pd.read_csv(glob.glob(file_name + "*.tsv")[0], sep='\t', header=0, index_col=0)
             self.test_df = None
         else:
             if 'insect' in data_name:
@@ -75,19 +75,19 @@ class DataLoader:
                 small_train_source = path + "/MixedShapesSmallTrain"
 
             elif 'freezer' in data_name:
-                # Load freezer
+                # Load Freezer
                 print("Loading the Freezer data set...")
                 regular_train_source = path + "/FreezerRegularTrain"
                 small_train_source = path + "/FreezerSmallTrain"
 
             elif 'beef' in data_name:
-                # Load beef
+                # Load Beef
                 print("Loading the Beef data set...")
                 regular_train_source = path + "/Beef"
                 small_train_source = path + "/Beef"
 
             elif 'coffee' in data_name:
-                # Load beef
+                # Load Coffee
                 print("Loading the Coffee data set...")
                 regular_train_source = path + "/Coffee"
                 small_train_source = path + "/Coffee"
@@ -99,7 +99,7 @@ class DataLoader:
                 small_train_source = path + "/ECG200"
 
             elif 'gunpoint' in data_name:
-                # Load beef
+                # Load Gunpoint
                 print("Loading the GunPoint data set...")
                 regular_train_source = path + "/GunPoint"
                 small_train_source = path + "/GunPoint"
@@ -140,10 +140,9 @@ class DataLoader:
         :return: X_train, y_train, X_test, y_test
         """
         tr = self.regular_train_df
-        print(tr.head())
         te = self.test_df
         if self.cgan:
-            X_train = tr[tr.columns[:-1]].to_numpy()
+            X_train = tr[tr.columns[:-1]]
             y_train = tr["l"].to_numpy()
             X_test = None
             y_test = None
@@ -173,7 +172,7 @@ if __name__ == '__main__':
     # data =  ['insect', 'shapes', 'freezer', 'beef', 'coffee', 'ecg200', 'gunpoint']
     data_name = 'insect'
     path = 'C:/Users/letiz/Desktop/Bachelor\'s Thesis and Seminar - JOIN.bsc/data'
-    data = DataLoader(path=path, data_name=data_name, cgan=False)
+    data = DataLoader(path=path, data_name=data_name, cgan=True)
     data.describe()
     print(data.regular_train_df)
     # print(data.short_train_df)
