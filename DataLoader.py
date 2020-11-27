@@ -9,13 +9,15 @@ class DataLoader:
     """Load one of the selected datasets (Beef, Freezer, InsectEPG, MixedShapes, etc) from UCR time series archive.
     It can also load the synthetic datasets, if they have been saved to tsv file already."""
 
-    def __init__(self, path, data_name='freezer', cgan=False):
+    def __init__(self, path, data_name='freezer', cgan=False, bootstrap_test=False):
         """
         Load the regular train set, small train set, and test set in the object.
         :param path: str, the path to the data folder
         :param data_name: str, a shorter name identifying the data set to load
         :param cgan: bool, if True, load the synthetic data from the tsv file
+        :param bootstrap_test: bool, if True, provide a bootstrap sample of the test set (sample with replacement)
         """
+        self.bootstrap = bootstrap_test
         self.cgan = cgan
         data_name = data_name.lower()
         if self.cgan:
@@ -153,8 +155,13 @@ class DataLoader:
         else:
             X_train = tr[tr.columns[1:]]
             y_train = tr[tr.columns[0]]
-            X_test = te[te.columns[1:]]
-            y_test = te[te.columns[0]]
+            if self.bootstrap:
+                te = te.sample(frac=1, replace=True)
+                X_test = te[te.columns[1:]]
+                y_test = te[te.columns[0]]
+            else:
+                X_test = te[te.columns[1:]]
+                y_test = te[te.columns[0]]
             if one_hot_encoding:
                 enc = OneHotEncoder(categories='auto')
                 enc.fit(np.concatenate((y_train, y_test), axis=0).reshape(-1, 1))
@@ -170,9 +177,9 @@ class DataLoader:
 
 if __name__ == '__main__':
     # data =  ['insect', 'shapes', 'freezer', 'beef', 'coffee', 'ecg200', 'gunpoint']
-    data_name = 'insect'
+    data_name = 'gunpoint'
     path = 'C:/Users/letiz/Desktop/Bachelor\'s Thesis and Seminar - JOIN.bsc/data'
-    data = DataLoader(path=path, data_name=data_name, cgan=True)
+    data = DataLoader(path=path, data_name=data_name, cgan=False, bootstrap_test=False)
     data.describe()
     print(data.regular_train_df)
     # print(data.short_train_df)
