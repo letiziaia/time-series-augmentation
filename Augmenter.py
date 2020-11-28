@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
@@ -20,10 +19,10 @@ class Augmenter:
         """
         idx = np.random.randint(0, self.data.shape[0])
         print(idx)
-        x = self.data.iloc[idx].values
-        y = self.labels.iloc[idx]
-        sns.lineplot(x=range(len(x)), y=x, label=f"ts {idx}, class {y}")
-        plt.show()
+        x = self.data[idx]
+        y = self.labels[idx]
+        # sns.lineplot(x=range(len(x)), y=x, label=f"ts {idx}, class {y}")
+        # plt.show()
         return x, y, idx
 
     def jittering(self, mu=0.0, sigma=0.01, additive=True):
@@ -104,46 +103,54 @@ class Augmenter:
 
 
 if __name__ == '__main__':
-    from DataLoader import DataLoader
+    # data =  ['insect', 'shapes', 'freezer', 'beef', 'coffee', 'ecg200', 'gunpoint']
+    data_name = 'gunpoint'
+    sns.set_theme(style="darkgrid")
 
-    path = 'C:/Users/letiz/Desktop/Bachelor\'s Thesis and Seminar - JOIN.bsc/data'
-    dt = DataLoader(path=path, data_name='insect')
-    X = dt.regular_train_df
-
-    # minority class
-    classes, counts = np.unique(X[0].to_numpy(), return_counts=True)
-    print("Classes: ", classes)
-    print("Counts: ", counts)
-    minority = [x for _, x in sorted(zip(counts, classes))][0]
-    print("Minority class: ", minority)
-
-    X = X[X[0] == minority]
-    y = X[0]
-    X = X[X.columns[1:]]
-
-    aug = Augmenter(data=X, labels=y)
-
-    # xx, _, _ = aug.jittering(mu=0, sigma=0.001)
+    # aug = Augmenter(data=X_train.to_numpy(), labels=y_train)
+    # xx, _, i = aug.jittering(mu=0.02, sigma=0.02)
     # print(xx)
-    # sns.lineplot(x=range(len(xx)), y=xx, label="jittered")
-    # plt.show()
-    #
-    # xx, _, _ = aug.flipping()
-    # print(xx)
-    # sns.lineplot(x=range(len(xx)), y=xx, label="flipped")
-    # plt.show()
-    #
-    # xx, _, _ = aug.permutation(n_segments=7)
-    # print(xx)
-    # sns.lineplot(x=range(len(xx)), y=xx, label="permuted")
-    # plt.show()
-    #
-    # xx, _, _ = aug.window_slicing(d=400)
-    # print(xx)
-    # sns.lineplot(x=range(len(xx)), y=xx, label="sliced")
+    # fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(18, 5))
+    # plt.suptitle("Data set: " + data_name + ", data point " + str(i))
+    # sns.lineplot(x=range(len(xx)), y=X_train.to_numpy()[i], label='Original', ax=axes[0])
+    # sns.lineplot(x=range(len(xx)), y=xx, label="Jittered", color="red", ax=axes[1])
+    # plt.tight_layout()
     # plt.show()
 
-    xx, _, _ = aug.smote_oversampling()
-    print(xx)
-    sns.lineplot(x=range(len(xx)), y=xx, label="smote_average")
-    plt.show()
+    # xx, _, i = aug.flipping()
+    # print(xx)
+    # fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(18, 5))
+    # plt.suptitle("Data set: " + data_name + ", data point " + str(i))
+    # sns.lineplot(x=range(len(xx)), y=X_train.to_numpy()[i], label='Original', ax=axes[0])
+    # sns.lineplot(x=range(len(xx)), y=xx, label="Flipped", color="red", ax=axes[1])
+    # plt.tight_layout()
+    # plt.show()
+
+    # xx, _, i = aug.permutation(n_segments=7)
+    # print(xx)
+    # fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(18, 5))
+    # plt.suptitle("Data set: " + data_name + ", data point " + str(i))
+    # sns.lineplot(x=range(len(xx)), y=X_train.to_numpy()[i], label='Original', ax=axes[0])
+    # sns.lineplot(x=range(len(xx)), y=xx, label="Permuted", color="red", ax=axes[1])
+    # plt.tight_layout()
+    # plt.show()
+
+    # xx, _, i = aug.window_slicing(d=400)
+    # print(xx)
+    # fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(18, 5))
+    # plt.suptitle("Data set: " + data_name + ", data point " + str(i))
+    # sns.lineplot(x=range(len(X_train.to_numpy()[i])), y=X_train.to_numpy()[i], label='Original', ax=axes[0])
+    # sns.lineplot(x=range(len(xx)), y=xx, label="Sliced", color="red", ax=axes[1])
+    # plt.tight_layout()
+    # plt.show()
+
+    # REMEMBER TO PASS ONLY ONE CLASS AT A TIME FOR THIS ONE
+    # xx, _, (i,j) = aug.smote_oversampling()
+    # print(xx)
+    # fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(18, 5))
+    # plt.suptitle("Data set: " + data_name + ", data points " + str((i, j)))
+    # sns.lineplot(x=range(len(X_train.to_numpy()[i])), y=X_train.to_numpy()[i], label='Original 1', ax=axes[0])
+    # sns.lineplot(x=range(len(X_train.to_numpy()[j])), y=X_train.to_numpy()[j], label='Original 2', ax=axes[0])
+    # sns.lineplot(x=range(len(xx)), y=xx, label="AVG_TS_SMOTE", color="red", ax=axes[1])
+    # plt.tight_layout()
+    # plt.show()
