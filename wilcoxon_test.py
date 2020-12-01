@@ -146,7 +146,10 @@ if __name__ == '__main__':
                    0.9903632265454679, 0.9862668769094314,
                    0.984308753138471, 0.9874184288401051]
     freezer_cgan = [0.9887719298245614, 0.9738330975954739,
-                    0.9760101507834829, ]
+                    0.9760101507834829, 0.9810171919770774,
+                    0.984530310014301, 0.9910391996220393,
+                    0.9803242456371721, 0.9749826268241835,
+                    0.9793781865154385, 0.9724569559881784]
     freezer_jit = [0.9905817882560832, 0.9862258640984114,
                    0.984199930661708, 0.9889334658161363,
                    0.9895104895104896, 0.9860945642521851,
@@ -167,11 +170,11 @@ if __name__ == '__main__':
                      0.9895199459093982, 0.9761570827489481,
                      0.9855144144015441, 0.984284262199494,
                      0.9825326079832208, 0.9849223686906095]
-    # freezer = build_df(cnn=freezer_cnn, jit=freezer_jit, flip=freezer_flip,
-    #                   perm=freezer_perm, smote=freezer_smote, cgan=freezer_cgan)
-    # boxplot(freezer, title="Freezer")
+    freezer = build_df(cnn=freezer_cnn, jit=freezer_jit, flip=freezer_flip,
+                       perm=freezer_perm, smote=freezer_smote, cgan=freezer_cgan)
+    boxplot(freezer, title="Freezer")
     # x = Aug, y = Orig
-    # test(x=freezer_cgan, y=freezer_cnn)
+    test(x=freezer_cgan, y=freezer_cnn)
     # test(x=freezer_jit, y=freezer_cnn)
     # test(x=freezer_flip, y=freezer_cnn)
     # test(x=freezer_perm, y=freezer_cnn)
@@ -256,15 +259,39 @@ if __name__ == '__main__':
     # test(x=ecg_flip, y=ecg_cnn)
     # test(x=ecg_perm, y=ecg_cnn)
     # test(x=ecg_smote, y=ecg_cnn)
-    # INSECTEPG -->
-    # ins_cnn = []
-    # ins_cgan = []
-    # ins_jit = []
-    # ins_flip = []
-    # ins_perm = []
-    # ins_smote = []
+    # INSECTEPG --> DONE
+    # ins_cnn = [1.0, 1.0,
+    #            1.0, 1.0,
+    #            1.0, 1.0,
+    #            1.0, 1.0,
+    #            1.0, 1.0]
+    # ins_cgan = [1.0, 1.0,
+    #             1.0, 1.0,
+    #             1.0, 1.0,
+    #             1.0, 1.0,
+    #             1.0, 1.0]
+    # ins_jit = [1.0, 1.0,
+    #            1.0, 1.0,
+    #            1.0, 1.0,
+    #            1.0, 1.0,
+    #            1.0, 1.0]
+    # ins_flip = [0.9971751412429378, 0.9972677595628415,
+    #             1.0, 1.0,
+    #             0.997245179063361, 0.9970501474926253,
+    #             1.0, 1.0,
+    #             1.0, 1.0]
+    # ins_perm = [1.0, 1.0,
+    #             1.0, 1.0,
+    #             1.0, 1.0,
+    #             1.0, 1.0,
+    #             1.0, 1.0]
+    # ins_smote = [1.0, 1.0,
+    #              1.0, 1.0,
+    #              1.0, 1.0,
+    #              1.0, 1.0,
+    #              1.0, 1.0]
     # ins = build_df(cnn=ins_cnn, jit=ins_jit, flip=ins_flip,
-    #                perm=ins_perm, smote=ins_smote, cgan=ins_cgan)
+    #               perm=ins_perm, smote=ins_smote, cgan=ins_cgan)
     # boxplot(ins, title="InsectEPG")
     # x = Aug, y = Orig
     # test(x=ins_cgan, y=ins_cnn)
