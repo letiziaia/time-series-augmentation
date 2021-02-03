@@ -78,8 +78,10 @@ class ClassifierCNN:
 
 if __name__ == '__main__':
     # data =  ['insect', 'shapes', 'freezer', 'beef', 'coffee', 'ecg200', 'gunpoint']
-    data_name = 'gunpoint'
-    dt = DataLoader(path="C:/Users/letiz/Desktop/Bachelor\'s Thesis and Seminar - JOIN.bsc/data", data_name=data_name)
+    data_name = 'ecg200'
+    dt = DataLoader(path="C:/Users/letiz/Desktop/Aalto/Bachelor\'s Thesis and Seminar - JOIN.bsc/data",
+                    data_name=data_name,
+                    bootstrap_test=True)
     dt.describe()
     X_train, y_train, X_test, y_test = dt.get_X_y(one_hot_encoding=True)
     nb_classes = y_train.shape[1]
@@ -91,5 +93,33 @@ if __name__ == '__main__':
 
     input_shape = X_train.shape[1:]
 
+    print("-----------------------------------")
+    print("ORIGINAL DATA SET")
+    print("-----------------------------------")
     ccnn = ClassifierCNN(input_shape=input_shape, nb_classes=nb_classes)
     ccnn.fit_predict(X_train, y_train, X_test, y_test)
+
+    dt = DataLoader(path="", data_name=data_name, cgan=True)
+    dt.describe()
+    Xs_train, ys_train, _, _ = dt.get_X_y(one_hot_encoding=True)
+    nb_classes = ys_train.shape[1]
+
+    if len(Xs_train.shape) == 2:  # if univariate
+        # add a dimension
+        Xs_train = Xs_train.to_numpy().reshape((Xs_train.shape[0], Xs_train.shape[1], 1))
+
+    input_shape = Xs_train.shape[1:]
+
+    # print("-----------------------------------")
+    # print("CGAN DATA SET")
+    # print("-----------------------------------")
+    # ccnn = ClassifierCNN(input_shape=input_shape, nb_classes=nb_classes)
+    # ccnn.fit_predict(Xs_train, ys_train, X_test, y_test)
+    #
+    # print("-----------------------------------")
+    # print("COMBINED DATA SET")
+    # print("-----------------------------------")
+    # ccnn = ClassifierCNN(input_shape=input_shape, nb_classes=nb_classes)
+    # ccnn.fit_predict(np.concatenate((X_train, Xs_train),axis=0),
+    #                  np.concatenate((y_train,ys_train), axis=0),
+    #                  X_test, y_test)

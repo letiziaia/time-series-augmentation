@@ -9,9 +9,9 @@ from cnn_classifier import ClassifierCNN
 
 def main():
     # unbalanced data =  ['insect', 'ecg200', 'gunpoint']
-    data_name = 'gunpoint'
-    path = 'C:/Users/letiz/Desktop/Bachelor\'s Thesis and Seminar - JOIN.bsc/data'
-    data = DataLoader(path=path, data_name=data_name, cgan=False)
+    data_name = 'insect'
+    path = 'C:/Users/letiz/Desktop/Aalto/Bachelor\'s Thesis and Seminar - JOIN.bsc/data'
+    data = DataLoader(path=path, data_name=data_name, cgan=False, bootstrap_test=True)
     X_train, y_train, _, _ = data.get_X_y(one_hot_encoding=False)
 
     # minority class
@@ -44,6 +44,8 @@ def main():
                     # x, y, idx = aug.flipping()
                     # print("Permutation")
                     # x, y, idx = aug.permutation(n_segments=7)
+                    # print("AVG_TS_SMOTE")
+                    # x, y, idx = aug.smote_oversampling()
                     print(f"{i + 1} artificial samples from class {label} done. The seed was {idx}")
                     fake.append(x)
                     fake_y.append(y)
@@ -64,6 +66,8 @@ def main():
                 # x, y, idx = aug.flipping()
                 # print("Permutation")
                 # x, y, idx = aug.permutation(n_segments=7)
+                # print("AVG_TS_SMOTE")
+                # x, y, idx = aug.smote_oversampling()
                 print(f"{i + 1} artificial samples from class {label} done. The seed was {idx}")
                 fake.append(x)
                 fake_y.append(y)
