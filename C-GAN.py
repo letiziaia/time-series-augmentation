@@ -4,18 +4,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from keras.layers import BatchNormalization, Embedding
+from keras.layers import BatchNormalization, Embedding, Conv1D, Bidirectional, LSTM, Conv1DTranspose
 from keras.layers import Input, Dense, Reshape, Flatten, Dropout, multiply
 from keras.layers.advanced_activations import LeakyReLU
 from keras.models import Sequential, Model
-from keras.optimizers import Adam
+from keras.optimizers import Adam, RMSprop
 from sklearn.preprocessing import MinMaxScaler
 
 from DataLoader import DataLoader
 
 
 class CGAN():
-    def __init__(self, input_shape, nb_classes, latent_dim=600, epochs=10000, mini_batch_size=15,
+    def __init__(self, input_shape, nb_classes, latent_dim=50, epochs=10000, mini_batch_size=15,
                  n_synthetic_per_class=10):
         # Input shape
         self.input_rows = input_shape[0]
@@ -40,37 +40,61 @@ class CGAN():
         self.generator = self.build_generator()
 
         # The generator takes noise and the target label as input
-        # and generates the corresponding digit of that label
+        # and generates the corresponding time series
         noise = Input(shape=(self.latent_dim,))
         label = Input(shape=(1,))
-        img = self.generator([noise, label])
+        time_series = self.generator([noise, label])
 
         # For the combined model, only train the generator
         self.discriminator.trainable = False
 
-        # The discriminator takes generated image as input and determines validity
-        # and the label of that image
-        valid = self.discriminator([img, label])
+        # The discriminator takes generated time series as input
+        # and determines validity and the label of that time series
+        valid = self.discriminator([time_series, label])
 
-        # The combined model  (stacked generator and discriminator)
+        # The combined model (stacked generator and discriminator)
         # Trains generator to fool discriminator
+        # self.combined = self.combined()
         self.combined = Model([noise, label], valid)
         self.combined.compile(loss=['binary_crossentropy'],
                               optimizer=optimizer)
+                              # optimizer=RMSprop(lr=0.0001, decay=3e-8)),
+                              # metrics=['accuracy'])
+        self.discriminator.trainable = True
+
+    def combined(self):
+        model = Sequential()
+        model.add(self.generator)
+        self.discriminator.trainable = False
+        model.add(self.discriminator)
+        model.compile(loss='binary_crossentropy',
+                      optimizer=RMSprop(lr=0.0001, decay=3e-8),
+                      metrics=['accuracy'])
+        self.discriminator.trainable = True
 
     def build_generator(self):
 
         model = Sequential()
 
-        model.add(Dense(256, input_dim=self.latent_dim))
+        model.add(Dense(int(self.latent_dim * 0.852), input_dim=self.latent_dim))
         model.add(LeakyReLU(alpha=0.2))
         model.add(BatchNormalization(momentum=0.8))
         model.add(Dense(512))
         model.add(LeakyReLU(alpha=0.2))
         model.add(BatchNormalization(momentum=0.8))
         model.add(Dense(1024))
-        model.add(LeakyReLU(alpha=0.2))
-        model.add(BatchNormalization(momentum=0.8))
+        model.add(Reshape((1, -1)))
+        # model.add(Conv1D(filters=12, kernel_size=3, padding="same"))
+        model.add(Conv1DTranspose(filters=2, kernel_size=3, padding="same"))
+        model.add(Dense(1024))
+        model.add(Reshape((4, 256)))
+        model.add(Bidirectional(LSTM(60)))
+        # model.add(Flatten())
+        model.add(Dense(2048))
+        model.add(LeakyReLU(alpha=0.1))
+        # model.add(BatchNormalization(momentum=0.8))
+        model.add(BatchNormalization(momentum=0.2, renorm=True, renorm_clipping={'rmax': 0.25, 'dmax': 0.2}))
+        model.add(Dense(np.prod(self.input_shape)))
         model.add(Dense(np.prod(self.input_shape), activation='tanh'))
         model.add(Reshape(self.input_shape))
 
@@ -114,11 +138,15 @@ class CGAN():
     def train_generate(self, X_train, y_train, checkpoint_interval=1000):
 
         print("classes: ", self.nb_classes)
+        X_train_representative = []
+        representative_labels = []
         for i in range(self.nb_classes):
             # get the first sample in class i from the original set
             class_i = np.where(y_train == i)[0][0]
             print("Plot original sample n. ", class_i)
             data = np.ravel(X_train[class_i, :, :])
+            X_train_representative.append(data)
+            representative_labels.append(i)
             sns.lineplot(x=range(X_train.shape[1]), y=data, label=f"orig {i}")
             plt.show()
 
@@ -132,19 +160,19 @@ class CGAN():
             #  Train Discriminator
             # ---------------------
 
-            # Select a random batch of images
+            # Select a random batch of original time series
             idx = np.random.randint(0, X_train.shape[0], self.mini_batch_size)
-            imgs, labels = X_train[idx], y_train[idx]
+            ts, labels = X_train[idx], y_train[idx]
 
             # Sample noise as generator input
             noise = np.random.normal(0, 1, (self.mini_batch_size, self.latent_dim))
 
             # Generate a batch of new samples
-            gen_imgs = self.generator.predict([noise, labels])
+            gen_ts = self.generator.predict([noise, labels])
 
             # Train the discriminator
-            d_loss_real = self.discriminator.train_on_batch([imgs, labels], valid)
-            d_loss_fake = self.discriminator.train_on_batch([gen_imgs, labels], fake)
+            d_loss_real = self.discriminator.train_on_batch([ts, labels], valid)
+            d_loss_fake = self.discriminator.train_on_batch([gen_ts, labels], fake)
             d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
 
             # ---------------------
@@ -160,22 +188,26 @@ class CGAN():
             # Plot the progress
             print("%d [D loss: %f, acc.: %.2f%%] [G loss: %f]" % (epoch, d_loss[0], 100 * d_loss[1], g_loss))
 
-            # Every checkpoin_interval epochs, view the generated samples
+            # Every checkpoint_interval epochs, view the generated samples
             if epoch % checkpoint_interval == 0:
-                self.sample_images()
-        self.sample_images()
+                self.sample_images(X_train_representative, representative_labels)
+
+        self.sample_images(X_train_representative, representative_labels)
         ts, l = self._generate()
         return ts, l
 
-    def sample_images(self):
+    def sample_images(self, X_repr, y_repr):
         noise = np.random.normal(0, 1, (self.nb_classes, self.latent_dim))
         sampled_labels = np.arange(0, self.nb_classes).reshape(-1, 1)
 
-        gen_imgs = self.generator.predict([noise, sampled_labels])
+        gen_ts = self.generator.predict([noise, sampled_labels])
 
-        for i in range(gen_imgs.shape[0]):
+        for i in range(gen_ts.shape[0]):
             label = sampled_labels[i]
-            sns.lineplot(x=range(gen_imgs.shape[1]), y=np.ravel(gen_imgs[i, :, :]), label=f"gen {label}")
+            idx = np.where(y_repr == label[0])[0][0]
+            X = X_repr[idx]
+            sns.lineplot(x=range(X.shape[0]), y=X, label=f"orig {label}")
+            sns.lineplot(x=range(gen_ts.shape[1]), y=np.ravel(gen_ts[i, :, :]), label=f"gen {label}")
             plt.show()
 
     def _generate(self):
@@ -196,9 +228,10 @@ class CGAN():
 
 
 if __name__ == '__main__':
+    path = "C:/Users/letiz/Desktop/Aalto/Bachelor\'s Thesis and Seminar - JOIN.bsc/data"
     # data =  ['insect', 'shapes', 'freezer', 'beef', 'coffee', 'ecg200', 'gunpoint']
-    data_name = 'insect'
-    dt = DataLoader(path="C:/Users/letiz/Desktop/Bachelor\'s Thesis and Seminar - JOIN.bsc/data", data_name=data_name)
+    data_name = 'gunpoint'
+    dt = DataLoader(path=path, data_name=data_name)
     dt.describe()
     samples_per_class = int(input("How many samples per class do you want to generate? "))
     X_train, y_train, _, _ = dt.get_X_y(one_hot_encoding=False)
@@ -209,7 +242,6 @@ if __name__ == '__main__':
     # Scale input
     scaler = MinMaxScaler()
     X_train = scaler.fit_transform(X_train)
-    # X_train = X_train.T
 
     if len(X_train.shape) == 2:  # if univariate
         # add a dimension
@@ -221,17 +253,37 @@ if __name__ == '__main__':
     y_train = y_train.reshape(-1, 1)
     print("y_train shape: ", y_train.shape)
 
-    cgan = CGAN(input_shape=input_shape, nb_classes=nb_classes,
-                mini_batch_size=input_shape[0],
-                latent_dim=input_shape[1], epochs=10000, n_synthetic_per_class=samples_per_class)
-    ts, l = cgan.train_generate(X_train, y_train, checkpoint_interval=20000)
 
-    print("\n")
-    print("Shape of generated data: ", ts.shape)
-    print("Shape of labels: ", l.shape)
-    print("\n")
+    ddf = pd.DataFrame()
+    for i in range(samples_per_class):
+        # Retrain everytime: safer in case of mode collapse
+        cgan = CGAN(input_shape=input_shape, nb_classes=nb_classes,
+                    mini_batch_size=input_shape[0],
+                    latent_dim=input_shape[1],
+                    epochs=500, n_synthetic_per_class=1)
+        ts, l = cgan.train_generate(X_train, y_train, checkpoint_interval=500)
 
-    df = pd.DataFrame(ts, columns=range(ts.shape[1]))
+        print("\n")
+        print("Shape of generated data: ", ts.shape)
+        print("Shape of labels: ", l.shape)
+        print("\n")
+
+        df = pd.DataFrame(ts, columns=range(ts.shape[1]))
+        ddf = ddf.append(df)
+
+    new_df = []
+    for i, row in ddf.iterrows():
+        # row = row.rolling(window=7, center=True).median()
+        row = row.rolling(window=7, center=True).mean()
+        row.bfill(inplace=True)
+        row.ffill(inplace=True)
+        new_df.append(row)
+        if i == 0:
+            sns.lineplot(x=range(X_train.shape[1]), y=np.ravel(X_train[-1]), label=f"orig")
+            sns.lineplot(x=range(len(row)), y=row, label=f"gen")
+            plt.show()
+
+    df = pd.DataFrame(new_df, columns=range(ts.shape[1]))
     df["l"] = l
     print(df.head())
 
