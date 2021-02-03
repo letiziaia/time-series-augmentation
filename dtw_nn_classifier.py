@@ -53,11 +53,23 @@ class ClassifierDTW:
 
 if __name__ == '__main__':
     # data =  ['insect', 'shapes', 'freezer', 'beef', 'coffee', 'ecg200', 'gunpoint']
-    data_name = 'insect'
-    dt = DataLoader(path="C:/Users/letiz/Desktop/Bachelor\'s Thesis and Seminar - JOIN.bsc/data", data_name=data_name)
+    data_name = 'gunpoint'
+    dt = DataLoader(path="C:/Users/letiz/Desktop/Aalto/Bachelor\'s Thesis and Seminar - JOIN.bsc/data", data_name=data_name)
     dt.describe()
     X_train, y_train, X_test, y_test = dt.get_X_y(one_hot_encoding=False)
-    nb_classes = len(np.unique(y_train))
 
+    print("-----------------------------------")
+    print("ORIGINAL DATA SET")
+    print("-----------------------------------")
     clf = ClassifierDTW(neighbors=1)
     clf.fit_predict(X_train, y_train, X_test, y_test)
+
+    # dt = DataLoader(path="", data_name=data_name, cgan=True)
+    # dt.describe()
+    # X_train, y_train, _, _ = dt.get_X_y(one_hot_encoding=False)
+
+    # print("-----------------------------------")
+    # print("CGAN DATA SET")
+    # print("-----------------------------------")
+    # clf = ClassifierDTW(neighbors=1)
+    # clf.fit_predict(X_train, y_train, X_test, y_test)

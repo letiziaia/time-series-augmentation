@@ -178,9 +178,25 @@ class DataLoader:
 if __name__ == '__main__':
     # data =  ['insect', 'shapes', 'freezer', 'beef', 'coffee', 'ecg200', 'gunpoint']
     data_name = 'gunpoint'
-    path = 'C:/Users/letiz/Desktop/Bachelor\'s Thesis and Seminar - JOIN.bsc/data'
+    path = 'C:/Users/letiz/Desktop/Aalto/Bachelor\'s Thesis and Seminar - JOIN.bsc/data'
     data = DataLoader(path=path, data_name=data_name, cgan=False, bootstrap_test=False)
     data.describe()
     print(data.regular_train_df)
     # print(data.short_train_df)
     print(data.test_df)
+
+    import seaborn as sns
+    import matplotlib.pyplot as plt
+    sns.set_theme(style="darkgrid")
+    data = DataLoader(path=path, data_name=data_name, cgan=False, bootstrap_test=False)
+    X_train, y_train, _, _ = data.get_X_y()
+    from sklearn.preprocessing import MinMaxScaler
+    sc = MinMaxScaler()
+    X_train = sc.fit_transform(X_train)
+    sns.lineplot(x=range(len(X_train[1])), y=X_train[1], label="original")
+    data = DataLoader(path=path, data_name=data_name, cgan=True, bootstrap_test=False)
+    X_train, y_train, _, _ = data.get_X_y()
+    sns.lineplot(x=range(len(X_train.to_numpy()[1])), y=X_train.to_numpy()[1], label="C-GAN")
+    plt.tight_layout()
+    plt.title("Gunpoint")
+    plt.show()
