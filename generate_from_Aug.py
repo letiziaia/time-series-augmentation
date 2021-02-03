@@ -8,7 +8,7 @@ from DataLoader import DataLoader
 
 
 def main(data_name, method):
-    path = 'C:/Users/letiz/Desktop/Bachelor\'s Thesis and Seminar - JOIN.bsc/data'
+    path = 'C:/Users/letiz/Desktop/Aalto/Bachelor\'s Thesis and Seminar - JOIN.bsc/data'
     dt = DataLoader(path=path, data_name=data_name)
     X_train, y_train, _, _ = dt.get_X_y(one_hot_encoding=False)
 
@@ -77,7 +77,7 @@ def main(data_name, method):
 
 if __name__ == '__main__':
     # data =  ['insect', 'shapes', 'freezer', 'beef', 'coffee', 'ecg200', 'gunpoint']
-    data_name = 'gunpoint'
+    data_name = 'ecg200'
     # method = ['jitt', 'flip', 'perm', 'smote']
     method = 'jitt'
     main(data_name=data_name, method=method)

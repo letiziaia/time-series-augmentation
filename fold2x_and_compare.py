@@ -50,6 +50,14 @@ def main(data_name, method=None, combined=True):
     dt = DataLoader(path="", data_name=data_name, cgan=True)
     dt.describe()
     Xs_train, ys_train, _, _ = dt.get_X_y(one_hot_encoding=False)
+    # idx_0 = np.where(ys_train==1.0)
+    # idx_2 = np.where(ys_train == 2.0)
+    # X0_train = pd.DataFrame(Xs_train.to_numpy()[idx_0]).sample(8)
+    # X2_train = pd.DataFrame(Xs_train.to_numpy()[idx_2]).sample(10)
+    # Xs_train = X0_train.append(X2_train)
+    # ys_train = np.concatenate([np.array([1.0]*8), np.array([2.0]*10)])
+    # print(np.unique(ys_train))
+    # print(Xs_train.shape)
 
     if len(Xs_train.shape) == 2:  # if univariate
         # add a dimension
@@ -223,7 +231,7 @@ def main(data_name, method=None, combined=True):
 
 if __name__ == '__main__':
     # data =  ['insect', 'shapes', 'freezer', 'beef', 'coffee', 'ecg200', 'gunpoint']
-    data_name = 'gunpoint'
+    data_name = 'freezer'
     # method = [None, 'jit', 'flip', 'perm', 'smote', 'cgan']
-    method = 'smote'
+    method = None
     main(data_name=data_name, method=method, combined=True)
